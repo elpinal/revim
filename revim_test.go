@@ -21,7 +21,7 @@ func TestMatchString(t *testing.T) {
 		re := Compile(test.expr)
 		ok := re.MatchString(test.s)
 		if ok != test.ok {
-			t.Errorf("MatchString(%q) should be ", test.s, test.ok)
+			t.Errorf("MatchString(%q) should be %v", test.s, test.ok)
 		}
 	}
 }
