@@ -15,16 +15,19 @@ type yySymType struct {
 	yys int
 	str string
 	re  Re
+	tok token
 }
 
-const STRING = 57346
+const ALT = 57346
+const AND = 57347
+const STRING = 57348
 
 var yyToknames = [...]string{
 	"$end",
 	"error",
 	"$unk",
-	"'\\\\'",
-	"'|'",
+	"ALT",
+	"AND",
 	"STRING",
 }
 var yyStatenames = [...]string{}
@@ -33,7 +36,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse.y:49
+//line parse.y:57
 
 const eof = 0
 
@@ -50,8 +53,8 @@ func (x *patternLex) Lex(yylval *yySymType) int {
 		switch c {
 		case eof:
 			return eof
-		case '\\', '|':
-			return int(c)
+		case '\\':
+			return x.escape(yylval)
 		default:
 			return x.str(c, yylval)
 		}
@@ -70,7 +73,7 @@ L:
 	for {
 		c = x.next()
 		switch c {
-		case eof, '\\', '|':
+		case eof, '\\':
 			break L
 		default:
 			add(&b, c)
@@ -81,6 +84,20 @@ L:
 	}
 	yylval.str = b.String()
 	return STRING
+}
+
+func (x *patternLex) escape(yylval *yySymType) int {
+	c := x.next()
+	switch c {
+	case '|':
+		return ALT
+	case '&':
+		return AND
+	}
+	if c != eof {
+		x.peek = c
+	}
+	return '\\'
 }
 
 func (x *patternLex) next() rune {
@@ -120,55 +137,43 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 8
+const yyLast = 9
 
 var yyAct = [...]int{
 
-	3, 2, 5, 4, 1, 0, 0, 6,
+	3, 4, 2, 6, 5, 1, 0, 8, 7,
 }
 var yyPact = [...]int{
 
-	-6, -1, -1000, -1000, -3, -6, -1000,
+	-5, 0, -2, -1000, -1000, -5, -5, -2, -1000,
 }
 var yyPgo = [...]int{
 
-	0, 4, 1,
+	0, 5, 2, 0,
 }
 var yyR1 = [...]int{
 
-	0, 1, 1, 2,
+	0, 1, 1, 2, 2, 3,
 }
 var yyR2 = [...]int{
 
-	0, 1, 4, 1,
+	0, 1, 3, 1, 3, 1,
 }
 var yyChk = [...]int{
 
-	-1000, -1, -2, 6, 4, 5, -2,
+	-1000, -1, -2, -3, 6, 4, 5, -2, -3,
 }
 var yyDef = [...]int{
 
-	0, -2, 1, 3, 0, 0, 2,
+	0, -2, 1, 3, 5, 0, 0, 2, 4,
 }
 var yyTok1 = [...]int{
 
-	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 4, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 5,
+	1,
 }
 var yyTok2 = [...]int{
 
-	2, 3, 6,
+	2, 3, 4, 5, 6,
 }
 var yyTok3 = [...]int{
 	0,
@@ -513,7 +518,7 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:28
+		//line parse.y:29
 		{
 			yyVAL.re = yyDollar[1].re
 			if l, ok := yylex.(*patternLex); ok {
@@ -521,17 +526,23 @@ yydefault:
 			}
 		}
 	case 2:
-		yyDollar = yyS[yypt-4 : yypt+1]
-		//line parse.y:35
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line parse.y:36
 		{
-			yyVAL.re = pattern(yyDollar[1].re, yyDollar[4].re)
+			yyVAL.re = pattern(yyDollar[1].re, yyDollar[3].re)
 			if l, ok := yylex.(*patternLex); ok {
 				l.pattern = yyVAL.re
 			}
 		}
-	case 3:
+	case 4:
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line parse.y:46
+		{
+			yyVAL.re = branch(yyDollar[1].re, yyDollar[3].re)
+		}
+	case 5:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:44
+		//line parse.y:52
 		{
 			yyVAL.re = literal(yyDollar[1].str)
 		}

@@ -13,11 +13,12 @@ import (
 %union {
         str string
         re Re
+        tok token
 }
 
-%type	<re>	pattern branch
+%type	<re>	pattern branch concat
 
-%token '\\' '|'
+%token  <tok>   ALT AND
 
 %token	<str>	STRING
 
@@ -31,15 +32,22 @@ pattern:
                         l.pattern = $$
                 }
         }
-|	pattern '\\' '|' branch
+|	pattern ALT branch
 	{
-                $$ = pattern($1, $4)
+                $$ = pattern($1, $3)
                 if l, ok := yylex.(*patternLex); ok {
                         l.pattern = $$
                 }
 	}
 
 branch:
+	concat
+|	branch AND concat
+        {
+                $$ = branch($1, $3)
+        }
+
+concat:
 	STRING
 	{
 		$$ = literal($1)
@@ -63,8 +71,8 @@ func (x *patternLex) Lex(yylval *yySymType) int {
 		switch c {
 		case eof:
 			return eof
-                case '\\', '|':
-                        return int(c)
+                case '\\':
+                        return x.escape(yylval)
 		default:
 			return x.str(c, yylval)
 		}
@@ -82,7 +90,7 @@ func (x *patternLex) str(c rune, yylval *yySymType) int {
 	L: for {
 		c = x.next()
 		switch c {
-		case eof, '\\', '|':
+		case eof, '\\':
 			break L
 		default:
 			add(&b, c)
@@ -93,6 +101,20 @@ func (x *patternLex) str(c rune, yylval *yySymType) int {
 	}
 	yylval.str = b.String()
 	return STRING
+}
+
+func (x *patternLex) escape(yylval *yySymType) int {
+        c := x.next()
+        switch c {
+        case '|':
+                return ALT
+        case '&':
+                return AND
+        }
+        if c != eof {
+                x.peek = c
+        }
+        return '\\'
 }
 
 func (x *patternLex) next() rune {

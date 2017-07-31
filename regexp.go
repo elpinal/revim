@@ -47,3 +47,29 @@ func pattern(re1, re2 Re) Re {
 		re2: re2,
 	}
 }
+
+type and struct {
+	re1, re2 Re
+}
+
+func (a and) match(s string) *reRange {
+	rr1 := a.re1.match(s)
+	if rr1 == nil {
+		return nil
+	}
+	rr2 := a.re2.match(s)
+	if rr2 == nil {
+		return nil
+	}
+	if rr1.left != rr2.left {
+		return nil
+	}
+	return rr2
+}
+
+func branch(re1, re2 Re) Re {
+	return and{
+		re1: re1,
+		re2: re2,
+	}
+}
