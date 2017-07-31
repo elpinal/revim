@@ -1,22 +1,19 @@
 package revim
 
-import "strings"
-
 type Regexp struct {
 	expr string
+	Re
 }
 
 func Compile(expr string) *Regexp {
-	re := parse(expr)
-	return re
-}
-
-func parse(expr string) *Regexp {
+	re := parse([]byte(expr))
 	return &Regexp{
 		expr: expr,
+		Re:   re,
 	}
 }
 
 func (re *Regexp) MatchString(s string) bool {
-	return strings.Index(s, re.expr) >= 0
+	rr := re.match(s)
+	return rr != nil
 }
