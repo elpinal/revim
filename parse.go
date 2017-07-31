@@ -19,7 +19,9 @@ type yySymType struct {
 
 const ALT = 57346
 const AND = 57347
-const CHAR = 57348
+const LPAREN = 57348
+const RPAREN = 57349
+const CHAR = 57350
 
 var yyToknames = [...]string{
 	"$end",
@@ -27,6 +29,8 @@ var yyToknames = [...]string{
 	"$unk",
 	"ALT",
 	"AND",
+	"LPAREN",
+	"RPAREN",
 	"CHAR",
 	"'*'",
 }
@@ -36,7 +40,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse.y:70
+//line parse.y:74
 
 const eof = 0
 
@@ -71,6 +75,10 @@ func (x *patternLex) escape(yylval *yySymType) int {
 		return ALT
 	case '&':
 		return AND
+	case '(':
+		return LPAREN
+	case ')':
+		return RPAREN
 	case '\\':
 		yylval.char = '\\'
 		return CHAR
@@ -118,39 +126,41 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 14
+const yyLast = 19
 
 var yyAct = [...]int{
 
-	4, 3, 10, 2, 9, 6, 8, 7, 5, 1,
-	12, 11, 0, 9,
+	4, 3, 11, 7, 10, 6, 8, 2, 9, 15,
+	1, 14, 8, 5, 0, 10, 13, 0, 12,
 }
 var yyPact = [...]int{
 
-	-1, 3, 1, -1, -1000, -5, -1000, -1, -1, -1000,
-	-1000, 1, -1,
+	-3, 8, 3, -3, -1000, -7, -1000, -3, -3, -3,
+	-1000, -1000, 2, 3, -3, -1000,
 }
 var yyPgo = [...]int{
 
-	0, 9, 3, 1, 0, 8,
+	0, 10, 7, 1, 0, 13,
 }
 var yyR1 = [...]int{
 
 	0, 1, 1, 2, 2, 3, 3, 4, 4, 5,
+	5,
 }
 var yyR2 = [...]int{
 
 	0, 1, 3, 1, 3, 1, 2, 1, 2, 1,
+	3,
 }
 var yyChk = [...]int{
 
-	-1000, -1, -2, -3, -4, -5, 6, 4, 5, -4,
-	7, -2, -3,
+	-1000, -1, -2, -3, -4, -5, 8, 6, 4, 5,
+	-4, 9, -1, -2, -3, 7,
 }
 var yyDef = [...]int{
 
-	0, -2, 1, 3, 5, 7, 9, 0, 0, 6,
-	8, 2, 4,
+	0, -2, 1, 3, 5, 7, 9, 0, 0, 0,
+	6, 8, 0, 2, 4, 10,
 }
 var yyTok1 = [...]int{
 
@@ -158,11 +168,11 @@ var yyTok1 = [...]int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 7,
+	3, 3, 9,
 }
 var yyTok2 = [...]int{
 
-	2, 3, 4, 5, 6,
+	2, 3, 4, 5, 6, 7, 8,
 }
 var yyTok3 = [...]int{
 	0,
@@ -546,6 +556,12 @@ yydefault:
 		//line parse.y:65
 		{
 			yyVAL.re = literal(yyDollar[1].char)
+		}
+	case 10:
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line parse.y:69
+		{
+			yyVAL.re = yyDollar[2].re
 		}
 	}
 	goto yystack /* stack new state and value */

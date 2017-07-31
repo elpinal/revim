@@ -17,7 +17,7 @@ import (
 
 %type	<re>	pattern branch concat piece atom
 
-%token  <tok>   ALT AND
+%token  <tok>   ALT AND LPAREN RPAREN
 
 %token	<char>	CHAR
 
@@ -65,6 +65,10 @@ atom:
 	{
 		$$ = literal($1)
 	}
+|	LPAREN pattern RPAREN
+        {
+                $$ = $2
+        }
 
 
 %%
@@ -102,6 +106,10 @@ func (x *patternLex) escape(yylval *yySymType) int {
                 return ALT
         case '&':
                 return AND
+        case '(':
+                return LPAREN
+        case ')':
+                return RPAREN
         case '\\':
                 yylval.char = '\\'
                 return CHAR
