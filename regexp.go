@@ -165,3 +165,21 @@ func plus(re Re) Re {
 		re: re,
 	}
 }
+
+type quest struct {
+	re Re
+}
+
+func (q quest) match(s string) *reRange {
+	rr := q.re.match(s)
+	if rr == nil {
+		return &reRange{}
+	}
+	return rr
+}
+
+func question(re Re) Re {
+	return quest{
+		re: re,
+	}
+}

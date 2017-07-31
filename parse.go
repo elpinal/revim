@@ -22,7 +22,8 @@ const AND = 57347
 const LPAREN = 57348
 const RPAREN = 57349
 const PLUS = 57350
-const CHAR = 57351
+const QUESTION = 57351
+const CHAR = 57352
 
 var yyToknames = [...]string{
 	"$end",
@@ -33,6 +34,7 @@ var yyToknames = [...]string{
 	"LPAREN",
 	"RPAREN",
 	"PLUS",
+	"QUESTION",
 	"CHAR",
 	"'*'",
 }
@@ -42,7 +44,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse.y:78
+//line parse.y:82
 
 const eof = 0
 
@@ -83,6 +85,8 @@ func (x *patternLex) escape(yylval *yySymType) int {
 		return RPAREN
 	case '+':
 		return PLUS
+	case '?':
+		return QUESTION
 	case '\\':
 		yylval.char = '\\'
 		return CHAR
@@ -130,41 +134,42 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 19
+const yyLast = 22
 
 var yyAct = [...]int{
 
-	4, 12, 7, 11, 10, 6, 2, 3, 8, 8,
-	1, 16, 9, 5, 0, 14, 10, 15, 13,
+	4, 3, 12, 13, 10, 11, 7, 2, 9, 8,
+	6, 16, 17, 1, 8, 5, 15, 10, 0, 0,
+	0, 14,
 }
 var yyPact = [...]int{
 
-	-4, 5, 7, -4, -1000, -7, -1000, -4, -4, -4,
-	-1000, -1000, -1000, 4, 7, -4, -1000,
+	0, 10, 3, 0, -1000, -6, -1000, 0, 0, 0,
+	-1000, -1000, -1000, -1000, 5, 3, 0, -1000,
 }
 var yyPgo = [...]int{
 
-	0, 10, 6, 7, 0, 13,
+	0, 13, 7, 1, 0, 15,
 }
 var yyR1 = [...]int{
 
 	0, 1, 1, 2, 2, 3, 3, 4, 4, 4,
-	5, 5,
+	4, 5, 5,
 }
 var yyR2 = [...]int{
 
 	0, 1, 3, 1, 3, 1, 2, 1, 2, 2,
-	1, 3,
+	2, 1, 3,
 }
 var yyChk = [...]int{
 
-	-1000, -1, -2, -3, -4, -5, 9, 6, 4, 5,
-	-4, 10, 8, -1, -2, -3, 7,
+	-1000, -1, -2, -3, -4, -5, 10, 6, 4, 5,
+	-4, 11, 8, 9, -1, -2, -3, 7,
 }
 var yyDef = [...]int{
 
-	0, -2, 1, 3, 5, 7, 10, 0, 0, 0,
-	6, 8, 9, 0, 2, 4, 11,
+	0, -2, 1, 3, 5, 7, 11, 0, 0, 0,
+	6, 8, 9, 10, 0, 2, 4, 12,
 }
 var yyTok1 = [...]int{
 
@@ -172,11 +177,11 @@ var yyTok1 = [...]int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 10,
+	3, 3, 11,
 }
 var yyTok2 = [...]int{
 
-	2, 3, 4, 5, 6, 7, 8, 9,
+	2, 3, 4, 5, 6, 7, 8, 9, 10,
 }
 var yyTok3 = [...]int{
 	0,
@@ -562,14 +567,20 @@ yydefault:
 			yyVAL.re = plus(yyDollar[1].re)
 		}
 	case 10:
+		yyDollar = yyS[yypt-2 : yypt+1]
+		//line parse.y:67
+		{
+			yyVAL.re = question(yyDollar[1].re)
+		}
+	case 11:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:69
+		//line parse.y:73
 		{
 			yyVAL.re = literal(yyDollar[1].char)
 		}
-	case 11:
+	case 12:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line parse.y:73
+		//line parse.y:77
 		{
 			yyVAL.re = yyDollar[2].re
 		}
