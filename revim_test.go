@@ -17,6 +17,15 @@ func TestMatchString(t *testing.T) {
 		{
 			"aaa", "aa", false,
 		},
+		{
+			`aaa\|bbb`, "aaaa", true,
+		},
+		{
+			`aaa\|bbb`, "bbbb", true,
+		},
+		{
+			`aaa\|bbb`, "bb", false,
+		},
 	} {
 		re := Compile(test.expr)
 		ok := re.MatchString(test.s)
