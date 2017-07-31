@@ -65,6 +65,15 @@ func TestMatchString(t *testing.T) {
 		{
 			`\(aba\)*`, `abbaabc`, true,
 		},
+		{
+			`\(aba\)\+`, `abaaabc`, true,
+		},
+		{
+			`\(aba\)\+`, `abaabac`, true,
+		},
+		{
+			`\(aba\)\+`, `aaaabc`, false,
+		},
 	} {
 		re := Compile(test.expr)
 		ok := re.MatchString(test.s)

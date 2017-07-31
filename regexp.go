@@ -139,3 +139,29 @@ func multi(re Re) Re {
 		re: re,
 	}
 }
+
+type pl struct {
+	re Re
+}
+
+func (p pl) match(s string) *reRange {
+	rr := p.re.match(s)
+	if rr == nil {
+		return nil
+	}
+	m := mul{re: p.re}
+	rr0 := m.match(s[rr.right:])
+	if rr0 == nil {
+		return rr
+	}
+	return &reRange{
+		left:  rr.left,
+		right: rr.right + rr0.right,
+	}
+}
+
+func plus(re Re) Re {
+	return pl{
+		re: re,
+	}
+}
