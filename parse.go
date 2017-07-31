@@ -11,15 +11,15 @@ import (
 
 //line parse.y:12
 type yySymType struct {
-	yys int
-	str string
-	re  Re
-	tok token
+	yys  int
+	char rune
+	re   Re
+	tok  token
 }
 
 const ALT = 57346
 const AND = 57347
-const STRING = 57348
+const CHAR = 57348
 
 var yyToknames = [...]string{
 	"$end",
@@ -27,7 +27,7 @@ var yyToknames = [...]string{
 	"$unk",
 	"ALT",
 	"AND",
-	"STRING",
+	"CHAR",
 	"'*'",
 }
 var yyStatenames = [...]string{}
@@ -58,8 +58,8 @@ func (x *patternLex) Lex(yylval *yySymType) int {
 		case '*':
 			return int(c)
 		default:
-			yylval.str = string(c)
-			return STRING
+			yylval.char = c
+			return CHAR
 		}
 	}
 }
@@ -72,8 +72,8 @@ func (x *patternLex) escape(yylval *yySymType) int {
 	case '&':
 		return AND
 	case '\\':
-		yylval.str = "\\"
-		return STRING
+		yylval.char = '\\'
+		return CHAR
 	}
 	if c != eof {
 		x.peek = c
@@ -545,7 +545,7 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		//line parse.y:65
 		{
-			yyVAL.re = literal(yyDollar[1].str)
+			yyVAL.re = literal(yyDollar[1].char)
 		}
 	}
 	goto yystack /* stack new state and value */

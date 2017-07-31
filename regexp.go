@@ -4,6 +4,7 @@ package revim
 
 import (
 	"strings"
+	"unicode/utf8"
 )
 
 type reRange struct {
@@ -14,21 +15,21 @@ type Re interface {
 	match(string) *reRange
 }
 
-type lit string
+type lit rune
 
 func (l lit) match(s string) *reRange {
-	i := strings.Index(s, string(l))
+	i := strings.IndexRune(s, rune(l))
 	if i < 0 {
 		return nil
 	}
 	return &reRange{
 		left:  i,
-		right: i + len(l),
+		right: i + utf8.RuneLen(rune(l)),
 	}
 }
 
-func literal(s string) Re {
-	return lit(s)
+func literal(r rune) Re {
+	return lit(r)
 }
 
 type alt struct {

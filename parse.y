@@ -10,7 +10,7 @@ import (
 %}
 
 %union {
-        str string
+        char rune
         re Re
         tok token
 }
@@ -19,7 +19,7 @@ import (
 
 %token  <tok>   ALT AND
 
-%token	<str>	STRING
+%token	<char>	CHAR
 
 %%
 
@@ -61,7 +61,7 @@ piece:
         }
 
 atom:
-	STRING
+	CHAR
 	{
 		$$ = literal($1)
 	}
@@ -89,8 +89,8 @@ func (x *patternLex) Lex(yylval *yySymType) int {
                 case '*':
                         return int(c)
 		default:
-                        yylval.str = string(c)
-			return STRING
+                        yylval.char = c
+			return CHAR
 		}
 	}
 }
@@ -103,8 +103,8 @@ func (x *patternLex) escape(yylval *yySymType) int {
         case '&':
                 return AND
         case '\\':
-                yylval.str = "\\"
-                return STRING
+                yylval.char = '\\'
+                return CHAR
         }
         if c != eof {
                 x.peek = c
