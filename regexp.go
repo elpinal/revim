@@ -1,5 +1,7 @@
 package revim
 
+//go:generate goyacc -o parse.go parse.y
+
 import "strings"
 
 type reRange struct {
