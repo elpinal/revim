@@ -2,7 +2,9 @@ package revim
 
 //go:generate goyacc -o parse.go parse.y
 
-import "strings"
+import (
+	"strings"
+)
 
 type reRange struct {
 	left, right int
@@ -83,16 +85,16 @@ func (c con) match(s string) *reRange {
 	if rr1 == nil {
 		return nil
 	}
-	rr2 := c.re2.match(s)
+	rr2 := c.re2.match(s[rr1.right:])
 	if rr2 == nil {
 		return nil
 	}
-	if rr1.right != rr2.left {
+	if rr2.left != 0 {
 		return nil
 	}
 	return &reRange{
 		left:  rr1.left,
-		right: rr2.right,
+		right: rr1.right + rr2.right,
 	}
 }
 
@@ -100,5 +102,39 @@ func concat(re1, re2 Re) Re {
 	return con{
 		re1: re1,
 		re2: re2,
+	}
+}
+
+type mul struct {
+	re Re
+}
+
+func (m mul) match(s string) *reRange {
+	rr := m.re.match(s)
+	if rr == nil {
+		return &reRange{
+			left:  0,
+			right: 0,
+		}
+	}
+	off := rr.right
+	left := rr.left
+	right := rr.right
+	for {
+		rr := m.re.match(s[off:])
+		if rr == nil {
+			return &reRange{
+				left:  left,
+				right: right,
+			}
+		}
+		off += rr.right
+		right = off
+	}
+}
+
+func multi(re Re) Re {
+	return mul{
+		re: re,
 	}
 }

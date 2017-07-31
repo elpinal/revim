@@ -3,7 +3,6 @@
 package revim
 
 import (
-	"bytes"
 	"log"
 	"unicode/utf8"
 )
@@ -16,7 +15,7 @@ import (
         tok token
 }
 
-%type	<re>	pattern branch concat piece
+%type	<re>	pattern branch concat piece atom
 
 %token  <tok>   ALT AND
 
@@ -55,6 +54,13 @@ concat:
         }
 
 piece:
+        atom
+|	atom '*'
+        {
+                $$ = multi($1)
+        }
+
+atom:
 	STRING
 	{
 		$$ = literal($1)
@@ -80,34 +86,13 @@ func (x *patternLex) Lex(yylval *yySymType) int {
 			return eof
                 case '\\':
                         return x.escape(yylval)
+                case '*':
+                        return int(c)
 		default:
-			return x.str(c, yylval)
+                        yylval.str = string(c)
+			return STRING
 		}
 	}
-}
-
-func (x *patternLex) str(c rune, yylval *yySymType) int {
-	add := func(b *bytes.Buffer, c rune) {
-		if _, err := b.WriteRune(c); err != nil {
-			log.Fatalf("WriteRune: %s", err)
-		}
-	}
-	var b bytes.Buffer
-	add(&b, c)
-	L: for {
-		c = x.next()
-		switch c {
-		case eof, '\\':
-			break L
-		default:
-			add(&b, c)
-		}
-	}
-	if c != eof {
-		x.peek = c
-	}
-	yylval.str = b.String()
-	return STRING
 }
 
 func (x *patternLex) escape(yylval *yySymType) int {
