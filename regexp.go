@@ -21,7 +21,7 @@ func (l lit) match(s string) *reRange {
 	}
 	return &reRange{
 		left:  i,
-		right: i + len(s),
+		right: i + len(l),
 	}
 }
 
@@ -69,6 +69,35 @@ func (a and) match(s string) *reRange {
 
 func branch(re1, re2 Re) Re {
 	return and{
+		re1: re1,
+		re2: re2,
+	}
+}
+
+type con struct {
+	re1, re2 Re
+}
+
+func (c con) match(s string) *reRange {
+	rr1 := c.re1.match(s)
+	if rr1 == nil {
+		return nil
+	}
+	rr2 := c.re2.match(s)
+	if rr2 == nil {
+		return nil
+	}
+	if rr1.right != rr2.left {
+		return nil
+	}
+	return &reRange{
+		left:  rr1.left,
+		right: rr2.right,
+	}
+}
+
+func concat(re1, re2 Re) Re {
+	return con{
 		re1: re1,
 		re2: re2,
 	}

@@ -16,7 +16,7 @@ import (
         tok token
 }
 
-%type	<re>	pattern branch concat
+%type	<re>	pattern branch concat piece
 
 %token  <tok>   ALT AND
 
@@ -48,6 +48,13 @@ branch:
         }
 
 concat:
+        piece
+|	concat piece
+        {
+                $$ = concat($1, $2)
+        }
+
+piece:
 	STRING
 	{
 		$$ = literal($1)
@@ -110,6 +117,9 @@ func (x *patternLex) escape(yylval *yySymType) int {
                 return ALT
         case '&':
                 return AND
+        case '\\':
+                yylval.str = "\\"
+                return STRING
         }
         if c != eof {
                 x.peek = c

@@ -36,7 +36,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse.y:57
+//line parse.y:64
 
 const eof = 0
 
@@ -93,6 +93,9 @@ func (x *patternLex) escape(yylval *yySymType) int {
 		return ALT
 	case '&':
 		return AND
+	case '\\':
+		yylval.str = "\\"
+		return STRING
 	}
 	if c != eof {
 		x.peek = c
@@ -137,35 +140,39 @@ var yyExca = [...]int{
 
 const yyPrivate = 57344
 
-const yyLast = 9
+const yyLast = 12
 
 var yyAct = [...]int{
 
-	3, 4, 2, 6, 5, 1, 0, 8, 7,
+	4, 3, 5, 2, 8, 7, 6, 1, 0, 10,
+	9, 8,
 }
 var yyPact = [...]int{
 
-	-5, 0, -2, -1000, -1000, -5, -5, -2, -1000,
+	-4, 2, 0, -4, -1000, -1000, -4, -4, -1000, 0,
+	-4,
 }
 var yyPgo = [...]int{
 
-	0, 5, 2, 0,
+	0, 7, 3, 1, 0,
 }
 var yyR1 = [...]int{
 
-	0, 1, 1, 2, 2, 3,
+	0, 1, 1, 2, 2, 3, 3, 4,
 }
 var yyR2 = [...]int{
 
-	0, 1, 3, 1, 3, 1,
+	0, 1, 3, 1, 3, 1, 2, 1,
 }
 var yyChk = [...]int{
 
-	-1000, -1, -2, -3, 6, 4, 5, -2, -3,
+	-1000, -1, -2, -3, -4, 6, 4, 5, -4, -2,
+	-3,
 }
 var yyDef = [...]int{
 
-	0, -2, 1, 3, 5, 0, 0, 2, 4,
+	0, -2, 1, 3, 5, 7, 0, 0, 6, 2,
+	4,
 }
 var yyTok1 = [...]int{
 
@@ -540,9 +547,15 @@ yydefault:
 		{
 			yyVAL.re = branch(yyDollar[1].re, yyDollar[3].re)
 		}
-	case 5:
+	case 6:
+		yyDollar = yyS[yypt-2 : yypt+1]
+		//line parse.y:53
+		{
+			yyVAL.re = concat(yyDollar[1].re, yyDollar[2].re)
+		}
+	case 7:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:52
+		//line parse.y:59
 		{
 			yyVAL.re = literal(yyDollar[1].str)
 		}
