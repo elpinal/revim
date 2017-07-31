@@ -9,31 +9,31 @@ func TestMatchString(t *testing.T) {
 		ok   bool
 	}{
 		{
-			"aaa", "aaa", true,
+			`aaa`, `aaa`, true,
 		},
 		{
-			"aaa", " aaaaa bbbbb ", true,
+			`aaa`, ` aaaaa bbbbb `, true,
 		},
 		{
-			"aaa", "aa", false,
+			`aaa`, `aa`, false,
 		},
 		{
-			`aaa\|bbb`, "aaaa", true,
+			`aaa\|bbb`, `aaaa`, true,
 		},
 		{
-			`aaa\|bbb`, "bbbb", true,
+			`aaa\|bbb`, `bbbb`, true,
 		},
 		{
-			`aaa\|bbb`, "bb", false,
+			`aaa\|bbb`, `bb`, false,
 		},
 		{
-			`aaabbb\&aaa`, "aaabbb", true,
+			`aaabbb\&aaa`, `aaabbb`, true,
 		},
 		{
-			`aaabbb\&aaa`, "aaa", false,
+			`aaabbb\&aaa`, `aaa`, false,
 		},
 		{
-			`bbb\&aaa\|aaabbb\&aaa`, "aaabbb", true,
+			`bbb\&aaa\|aaabbb\&aaa`, `aaabbb`, true,
 		},
 		{
 			`aaa\\bbb`, `aaa\bbb`, true,
