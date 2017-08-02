@@ -11,11 +11,11 @@ import (
 
 %union {
         char rune
-        re Re
         tok token
+        frag frag
 }
 
-%type	<re>	pattern branch concat piece atom
+%type	<frag>	pattern branch concat piece atom
 
 %token  <tok>   ALT AND LPAREN RPAREN PLUS QUESTION
 
@@ -87,7 +87,7 @@ type patternLex struct {
 	line []byte
 	peek rune
 
-        pattern Re
+        pattern frag
 }
 
 func (x *patternLex) Lex(yylval *yySymType) int {
@@ -154,8 +154,10 @@ func (x *patternLex) Error(s string) {
 	log.Printf("parse error (peek: %d): %s", x.peek, s)
 }
 
-func parse(line []byte) Re {
+func parse(line []byte) *state {
         l := patternLex{line: line}
         yyParse(&l)
-        return l.pattern
+        f := l.pattern
+        patch(f, *matchState)
+        return f.start
 }

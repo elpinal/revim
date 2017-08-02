@@ -13,8 +13,8 @@ import (
 type yySymType struct {
 	yys  int
 	char rune
-	re   Re
 	tok  token
+	frag frag
 }
 
 const ALT = 57346
@@ -52,7 +52,7 @@ type patternLex struct {
 	line []byte
 	peek rune
 
-	pattern Re
+	pattern frag
 }
 
 func (x *patternLex) Lex(yylval *yySymType) int {
@@ -119,10 +119,12 @@ func (x *patternLex) Error(s string) {
 	log.Printf("parse error (peek: %d): %s", x.peek, s)
 }
 
-func parse(line []byte) Re {
+func parse(line []byte) *state {
 	l := patternLex{line: line}
 	yyParse(&l)
-	return l.pattern
+	f := l.pattern
+	patch(f, *matchState)
+	return f.start
 }
 
 //line yacctab:1
@@ -528,61 +530,61 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		//line parse.y:28
 		{
-			yyVAL.re = yyDollar[1].re
+			yyVAL.frag = yyDollar[1].frag
 			if l, ok := yylex.(*patternLex); ok {
-				l.pattern = yyVAL.re
+				l.pattern = yyVAL.frag
 			}
 		}
 	case 2:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		//line parse.y:35
 		{
-			yyVAL.re = pattern(yyDollar[1].re, yyDollar[3].re)
+			yyVAL.frag = pattern(yyDollar[1].frag, yyDollar[3].frag)
 			if l, ok := yylex.(*patternLex); ok {
-				l.pattern = yyVAL.re
+				l.pattern = yyVAL.frag
 			}
 		}
 	case 4:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		//line parse.y:45
 		{
-			yyVAL.re = branch(yyDollar[1].re, yyDollar[3].re)
+			yyVAL.frag = branch(yyDollar[1].frag, yyDollar[3].frag)
 		}
 	case 6:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		//line parse.y:52
 		{
-			yyVAL.re = concat(yyDollar[1].re, yyDollar[2].re)
+			yyVAL.frag = concat(yyDollar[1].frag, yyDollar[2].frag)
 		}
 	case 8:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		//line parse.y:59
 		{
-			yyVAL.re = multi(yyDollar[1].re)
+			yyVAL.frag = multi(yyDollar[1].frag)
 		}
 	case 9:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		//line parse.y:63
 		{
-			yyVAL.re = plus(yyDollar[1].re)
+			yyVAL.frag = plus(yyDollar[1].frag)
 		}
 	case 10:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		//line parse.y:67
 		{
-			yyVAL.re = question(yyDollar[1].re)
+			yyVAL.frag = question(yyDollar[1].frag)
 		}
 	case 11:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		//line parse.y:73
 		{
-			yyVAL.re = literal(yyDollar[1].char)
+			yyVAL.frag = literal(yyDollar[1].char)
 		}
 	case 12:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		//line parse.y:77
 		{
-			yyVAL.re = yyDollar[2].re
+			yyVAL.frag = yyDollar[2].frag
 		}
 	}
 	goto yystack /* stack new state and value */

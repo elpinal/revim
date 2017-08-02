@@ -3,7 +3,7 @@ package revim
 import "testing"
 
 func TestMatchString(t *testing.T) {
-	for _, test := range []struct {
+	for i, test := range []struct {
 		expr string
 		s    string
 		ok   bool
@@ -87,7 +87,7 @@ func TestMatchString(t *testing.T) {
 		re := Compile(test.expr)
 		ok := re.MatchString(test.s)
 		if ok != test.ok {
-			t.Errorf("MatchString(%q) should be %v", test.s, test.ok)
+			t.Errorf("MatchString(%d, %q) should be %v", i, test.s, test.ok)
 		}
 	}
 }

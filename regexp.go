@@ -1,185 +1,113 @@
 package revim
 
+import "log"
+
 //go:generate goyacc -o parse.go parse.y
 
-import (
-	"strings"
-	"unicode/utf8"
-)
+type state struct {
+	split bool
+	match bool
 
-type reRange struct {
-	left, right int
+	r    rune
+	out  *state
+	out1 *state
+	//lastList int
 }
 
-type Re interface {
-	match(string) *reRange
+var matchState = &state{match: true, out: &state{}}
+
+type frag struct {
+	start     *state
+	out       []*state
+	backtrack bool
 }
 
-type lit rune
-
-func (l lit) match(s string) *reRange {
-	i := strings.IndexRune(s, rune(l))
-	if i < 0 {
-		return nil
-	}
-	return &reRange{
-		left:  i,
-		right: i + utf8.RuneLen(rune(l)),
-	}
-}
-
-func literal(r rune) Re {
-	return lit(r)
-}
-
-type alt struct {
-	re1, re2 Re
-}
-
-func (a alt) match(s string) *reRange {
-	rr := a.re1.match(s)
-	if rr != nil {
-		return rr
-	}
-	return a.re2.match(s)
-}
-
-func pattern(re1, re2 Re) Re {
-	return alt{
-		re1: re1,
-		re2: re2,
+func literal(r rune) frag {
+	s := state{r: r, out: &state{}}
+	return frag{
+		start: &s,
+		out:   []*state{(&s).out},
 	}
 }
 
-type and struct {
-	re1, re2 Re
-}
-
-func (a and) match(s string) *reRange {
-	rr1 := a.re1.match(s)
-	if rr1 == nil {
-		return nil
+func pattern(f1, f2 frag) frag {
+	s := &state{
+		split: true,
+		out:   f1.start,
+		out1:  f2.start,
 	}
-	rr2 := a.re2.match(s)
-	if rr2 == nil {
-		return nil
-	}
-	if rr1.left != rr2.left {
-		return nil
-	}
-	return rr2
-}
-
-func branch(re1, re2 Re) Re {
-	return and{
-		re1: re1,
-		re2: re2,
+	return frag{
+		start: s,
+		out:   append(f1.out, f2.out...),
 	}
 }
 
-type con struct {
-	re1, re2 Re
-}
-
-func (c con) match(s string) *reRange {
-	rr1 := c.re1.match(s)
-	if rr1 == nil {
-		return nil
-	}
-	rr2 := c.re2.match(s[rr1.right:])
-	if rr2 == nil {
-		return nil
-	}
-	if rr2.left != 0 {
-		return nil
-	}
-	return &reRange{
-		left:  rr1.left,
-		right: rr1.right + rr2.right,
+func patch(f1 frag, s state) {
+	for i := range f1.out {
+		*f1.out[i] = s
 	}
 }
 
-func concat(re1, re2 Re) Re {
-	return con{
-		re1: re1,
-		re2: re2,
+func branch(f1, f2 frag) frag {
+	for i := range f1.out {
+		*f1.out[i] = *f2.start
+	}
+	return frag{
+		start:     f1.start,
+		out:       f2.out,
+		backtrack: true,
 	}
 }
 
-type mul struct {
-	re Re
-}
-
-func (m mul) match(s string) *reRange {
-	rr := m.re.match(s)
-	if rr == nil {
-		return &reRange{
-			left:  0,
-			right: 0,
-		}
+func concat(f1, f2 frag) frag {
+	for i := range f1.out {
+		log.Println("concat", f1, f2)
+		*f1.out[i] = *f2.start
 	}
-	off := rr.right
-	left := rr.left
-	right := rr.right
-	for {
-		rr := m.re.match(s[off:])
-		if rr == nil {
-			return &reRange{
-				left:  left,
-				right: right,
-			}
-		}
-		off += rr.right
-		right = off
+	return frag{
+		start: f1.start,
+		out:   f2.out,
 	}
 }
 
-func multi(re Re) Re {
-	return mul{
-		re: re,
+func multi(f frag) frag {
+	s := state{
+		split: true,
+		out:   f.start,
+		out1:  &state{},
+	}
+	for i := range f.out {
+		*f.out[i] = s
+	}
+	return frag{
+		start: &s,
+		out:   []*state{(&s).out1},
 	}
 }
 
-type pl struct {
-	re Re
-}
-
-func (p pl) match(s string) *reRange {
-	rr := p.re.match(s)
-	if rr == nil {
-		return nil
+func plus(f frag) frag {
+	s := state{
+		split: true,
+		out:   f.start,
+		out1:  &state{},
 	}
-	m := mul{re: p.re}
-	rr0 := m.match(s[rr.right:])
-	if rr0 == nil {
-		return rr
+	for i := range f.out {
+		*f.out[i] = s
 	}
-	return &reRange{
-		left:  rr.left,
-		right: rr.right + rr0.right,
+	return frag{
+		start: f.start,
+		out:   []*state{(&s).out1},
 	}
 }
 
-func plus(re Re) Re {
-	return pl{
-		re: re,
+func question(f frag) frag {
+	s := state{
+		split: true,
+		out:   f.start,
+		out1:  &state{},
 	}
-}
-
-type quest struct {
-	re Re
-}
-
-func (q quest) match(s string) *reRange {
-	rr := q.re.match(s)
-	if rr == nil {
-		return &reRange{}
-	}
-	return rr
-}
-
-func question(re Re) Re {
-	return quest{
-		re: re,
+	return frag{
+		start: &s,
+		out:   append(f.out, s.out1),
 	}
 }
