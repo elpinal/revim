@@ -4,12 +4,7 @@ package revim
 import __yyfmt__ "fmt"
 
 //line parse.y:3
-import (
-	"log"
-	"unicode/utf8"
-)
-
-//line parse.y:12
+//line parse.y:7
 type yySymType struct {
 	yys  int
 	char rune
@@ -44,88 +39,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parse.y:82
-
-const eof = 0
-
-type patternLex struct {
-	line []byte
-	peek rune
-
-	pattern frag
-}
-
-func (x *patternLex) Lex(yylval *yySymType) int {
-	for {
-		c := x.next()
-		switch c {
-		case eof:
-			return eof
-		case '\\':
-			return x.escape(yylval)
-		case '*':
-			return int(c)
-		default:
-			yylval.char = c
-			return CHAR
-		}
-	}
-}
-
-func (x *patternLex) escape(yylval *yySymType) int {
-	c := x.next()
-	switch c {
-	case '|':
-		return ALT
-	case '&':
-		return AND
-	case '(':
-		return LPAREN
-	case ')':
-		return RPAREN
-	case '+':
-		return PLUS
-	case '?':
-		return QUESTION
-	case '\\':
-		yylval.char = '\\'
-		return CHAR
-	}
-	if c != eof {
-		x.peek = c
-	}
-	return '\\'
-}
-
-func (x *patternLex) next() rune {
-	if x.peek != eof {
-		r := x.peek
-		x.peek = eof
-		return r
-	}
-	if len(x.line) == 0 {
-		return eof
-	}
-	c, size := utf8.DecodeRune(x.line)
-	x.line = x.line[size:]
-	if c == utf8.RuneError && size == 1 {
-		log.Print("invalid utf8")
-		return x.next()
-	}
-	return c
-}
-
-func (x *patternLex) Error(s string) {
-	log.Printf("parse error (peek: %d): %s", x.peek, s)
-}
-
-func parse(line []byte) *state {
-	l := patternLex{line: line}
-	yyParse(&l)
-	f := l.pattern
-	patch(f, *matchState)
-	return f.start
-}
+//line parse.y:77
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -528,7 +442,7 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:28
+		//line parse.y:23
 		{
 			yyVAL.frag = yyDollar[1].frag
 			if l, ok := yylex.(*patternLex); ok {
@@ -537,7 +451,7 @@ yydefault:
 		}
 	case 2:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line parse.y:35
+		//line parse.y:30
 		{
 			yyVAL.frag = pattern(yyDollar[1].frag, yyDollar[3].frag)
 			if l, ok := yylex.(*patternLex); ok {
@@ -546,43 +460,43 @@ yydefault:
 		}
 	case 4:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line parse.y:45
+		//line parse.y:40
 		{
 			yyVAL.frag = branch(yyDollar[1].frag, yyDollar[3].frag)
 		}
 	case 6:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line parse.y:52
+		//line parse.y:47
 		{
 			yyVAL.frag = concat(yyDollar[1].frag, yyDollar[2].frag)
 		}
 	case 8:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line parse.y:59
+		//line parse.y:54
 		{
 			yyVAL.frag = multi(yyDollar[1].frag)
 		}
 	case 9:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line parse.y:63
+		//line parse.y:58
 		{
 			yyVAL.frag = plus(yyDollar[1].frag)
 		}
 	case 10:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line parse.y:67
+		//line parse.y:62
 		{
 			yyVAL.frag = question(yyDollar[1].frag)
 		}
 	case 11:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line parse.y:73
+		//line parse.y:68
 		{
 			yyVAL.frag = literal(yyDollar[1].char)
 		}
 	case 12:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line parse.y:77
+		//line parse.y:72
 		{
 			yyVAL.frag = yyDollar[2].frag
 		}
