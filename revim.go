@@ -7,12 +7,15 @@ type Regexp struct {
 	s    *state
 }
 
-func Compile(expr string) *Regexp {
-	s := parse([]byte(expr))
+func Compile(expr string) (*Regexp, error) {
+	s, err := parse([]byte(expr))
+	if err != nil {
+		return nil, err
+	}
 	return &Regexp{
 		expr: expr,
 		s:    s,
-	}
+	}, nil
 }
 
 func (re *Regexp) MatchString(str string) bool {

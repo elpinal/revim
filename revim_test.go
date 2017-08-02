@@ -84,7 +84,10 @@ func TestMatchString(t *testing.T) {
 			`\(aba\)\?`, `ccc`, true,
 		},
 	} {
-		re := Compile(test.expr)
+		re, err := Compile(test.expr)
+		if err != nil {
+			t.Fatalf("compiling (%d, %q) : %v", i, test.s, err)
+		}
 		ok := re.MatchString(test.s)
 		if ok != test.ok {
 			t.Errorf("MatchString(%d, %q) should be %v", i, test.s, test.ok)

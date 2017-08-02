@@ -1,7 +1,8 @@
 package revim
 
 import (
-	"log"
+	"errors"
+	"fmt"
 	"unicode/utf8"
 )
 
@@ -10,6 +11,7 @@ const eof = 0
 type patternLex struct {
 	line []byte
 	peek rune
+	err  error
 
 	pattern frag
 }
@@ -68,20 +70,23 @@ func (x *patternLex) next() rune {
 	c, size := utf8.DecodeRune(x.line)
 	x.line = x.line[size:]
 	if c == utf8.RuneError && size == 1 {
-		log.Print("invalid utf8")
+		x.err = errors.New("next: invalid utf8")
 		return x.next()
 	}
 	return c
 }
 
 func (x *patternLex) Error(s string) {
-	log.Printf("parse error (peek: %d): %s", x.peek, s)
+	x.err = fmt.Errorf("parse error (peek: %d): %s", x.peek, s)
 }
 
-func parse(line []byte) *state {
+func parse(line []byte) (*state, error) {
 	l := patternLex{line: line}
 	yyParse(&l)
+	if l.err != nil {
+		return nil, l.err
+	}
 	f := l.pattern
 	patch(f, *matchState)
-	return f.start
+	return f.start, nil
 }
