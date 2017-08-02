@@ -1,7 +1,5 @@
 package revim
 
-import "log"
-
 //go:generate goyacc -o parse.go parse.y
 
 type state struct {
@@ -64,7 +62,6 @@ func branch(f1, f2 frag) frag {
 
 func concat(f1, f2 frag) frag {
 	for i := range f1.out {
-		log.Println("concat", f1, f2)
 		*f1.out[i] = *f2.start
 	}
 	return frag{

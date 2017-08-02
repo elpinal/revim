@@ -1,9 +1,6 @@
 package revim
 
-import (
-	"log"
-	"unicode/utf8"
-)
+import "unicode/utf8"
 
 type Regexp struct {
 	expr string
@@ -20,10 +17,8 @@ func Compile(expr string) *Regexp {
 
 func (re *Regexp) MatchString(str string) bool {
 	s := str
-	log.Println("MatchString", s)
 	for {
-		ok, rest := re.s.process(make(map[*state]string), s)
-		log.Println("MatchString", rest)
+		ok, _ := re.s.process(make(map[*state]string), s)
 		if ok {
 			return true
 		}
@@ -36,17 +31,13 @@ func (re *Regexp) MatchString(str string) bool {
 }
 
 func (s *state) process(m map[*state]string, str string) (bool, string) {
-	log.Printf("process: %#v %s", *s, str)
 	if s.match {
 		return true, str
 	}
 	if s.backtrack != nil {
-		log.Println("backtrack", str, s.backtrack)
 		m[s.backtrack] = str
 	}
-	log.Printf("============== %p %v %s", s, m, str)
 	if bs, ok := m[s]; ok {
-		log.Println("backtrack", str, bs)
 		str = bs
 	}
 	if !s.split {
