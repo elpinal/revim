@@ -86,7 +86,7 @@ func TestMatchString(t *testing.T) {
 	} {
 		re, err := Compile(test.expr)
 		if err != nil {
-			t.Fatalf("compiling (%d, %q) : %v", i, test.s, err)
+			t.Fatalf("compiling (%d, %q): %v", i, test.s, err)
 		}
 		ok := re.MatchString(test.s)
 		if ok != test.ok {
