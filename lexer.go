@@ -14,6 +14,8 @@ type patternLex struct {
 	err  error
 
 	pattern frag
+
+	off int // information for error messages
 }
 
 func (x *patternLex) Lex(yylval *yySymType) int {
@@ -69,6 +71,7 @@ func (x *patternLex) next() rune {
 	}
 	c, size := utf8.DecodeRune(x.line)
 	x.line = x.line[size:]
+	x.off++
 	if c == utf8.RuneError && size == 1 {
 		x.err = errors.New("next: invalid utf8")
 		return x.next()
@@ -77,7 +80,7 @@ func (x *patternLex) next() rune {
 }
 
 func (x *patternLex) Error(s string) {
-	x.err = fmt.Errorf("parse error (peek: %d): %s", x.peek, s)
+	x.err = fmt.Errorf("parse error (offset: %d, peek: %q): %s", x.off, x.peek, s)
 }
 
 func parse(line []byte) (*state, error) {
