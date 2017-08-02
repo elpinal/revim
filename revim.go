@@ -22,7 +22,7 @@ func (re *Regexp) MatchString(str string) bool {
 	s := str
 	log.Println("MatchString", s)
 	for {
-		ok, rest := re.s.process(s)
+		ok, rest := re.s.process(make(map[*state]string), s)
 		log.Println("MatchString", rest)
 		if ok {
 			return true
@@ -35,10 +35,19 @@ func (re *Regexp) MatchString(str string) bool {
 	return false
 }
 
-func (s *state) process(str string) (bool, string) {
+func (s *state) process(m map[*state]string, str string) (bool, string) {
 	log.Printf("process: %#v %s", *s, str)
 	if s.match {
 		return true, str
+	}
+	if s.backtrack != nil {
+		log.Println("backtrack", str, s.backtrack)
+		m[s.backtrack] = str
+	}
+	log.Printf("============== %p %v %s", s, m, str)
+	if bs, ok := m[s]; ok {
+		log.Println("backtrack", str, bs)
+		str = bs
 	}
 	if !s.split {
 		if len(str) == 0 {
@@ -49,15 +58,18 @@ func (s *state) process(str string) (bool, string) {
 			if s.out == nil {
 				return true, str[size:]
 			}
-			return s.out.process(str[size:])
+			return s.out.process(m, str[size:])
 		}
 		return false, str
 	}
-	ok, rest := s.out.process(str)
+	ok, rest := s.out.process(m, str)
 	if ok {
 		return true, rest
 	}
-	ok, rest = s.out1.process(str)
+	if s.out1 == nil {
+		return false, str
+	}
+	ok, rest = s.out1.process(m, str)
 	if ok {
 		return true, rest
 	}

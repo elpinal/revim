@@ -12,14 +12,15 @@ type state struct {
 	out  *state
 	out1 *state
 	//lastList int
+
+	backtrack *state
 }
 
 var matchState = &state{match: true, out: &state{}}
 
 type frag struct {
-	start     *state
-	out       []*state
-	backtrack bool
+	start *state
+	out   []*state
 }
 
 func literal(r rune) frag {
@@ -49,13 +50,15 @@ func patch(f1 frag, s state) {
 }
 
 func branch(f1, f2 frag) frag {
-	for i := range f1.out {
-		*f1.out[i] = *f2.start
+	s := state{
+		split: true, // FIXME: In fact, it's false.
+		out:   f2.start,
 	}
+	patch(f1, s)
+	f1.start.backtrack = s.out
 	return frag{
-		start:     f1.start,
-		out:       f2.out,
-		backtrack: true,
+		start: f1.start,
+		out:   f2.out,
 	}
 }
 
