@@ -31,6 +31,23 @@ func (re *Regexp) MatchString(str string) bool {
 	return false
 }
 
+func (re *Regexp) FindStringIndex(str string) (loc []int) {
+	s := []rune(str)
+	var i int
+	for {
+		ok, rest := re.s.process(s)
+		if ok {
+			return []int{i, len(str) - len(rest)}
+		}
+		if len(s) == 0 {
+			return nil
+		}
+		s = s[1:]
+		i++
+	}
+	return nil
+}
+
 func (s *state) process(str []rune) (bool, []rune) {
 	if s.match {
 		return true, str

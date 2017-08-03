@@ -84,7 +84,7 @@ func multi(f frag) frag {
 	}
 	return frag{
 		start: &s,
-		out:   []*state{(&s).out1},
+		out:   []*state{s.out1},
 	}
 }
 
