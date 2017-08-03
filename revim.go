@@ -1,7 +1,5 @@
 package revim
 
-import "unicode/utf8"
-
 type Regexp struct {
 	expr string
 	s    *state
@@ -19,7 +17,7 @@ func Compile(expr string) (*Regexp, error) {
 }
 
 func (re *Regexp) MatchString(str string) bool {
-	s := str
+	s := []rune(str)
 	for {
 		ok, _ := re.s.process(s)
 		if ok {
@@ -33,7 +31,7 @@ func (re *Regexp) MatchString(str string) bool {
 	return false
 }
 
-func (s *state) process(str string) (bool, string) {
+func (s *state) process(str []rune) (bool, []rune) {
 	if s.match {
 		return true, str
 	}
@@ -52,12 +50,12 @@ func (s *state) process(str string) (bool, string) {
 		if len(str) == 0 {
 			return false, str
 		}
-		r, size := utf8.DecodeRuneInString(str)
+		r := str[0]
 		if s.r == r {
 			if s.out == nil {
-				return true, str[size:]
+				return true, str[1:]
 			}
-			return s.out.process(str[size:])
+			return s.out.process(str[1:])
 		}
 		return false, str
 	}
