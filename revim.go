@@ -48,6 +48,31 @@ func (re *Regexp) FindStringIndex(str string) (loc []int) {
 	return nil
 }
 
+func (re *Regexp) FindAllStringIndex(str string) [][]int {
+	result := make([][]int, 0, 4)
+	s := []rune(str)
+	var i int
+	for {
+		ok, rest := re.s.process(s)
+		if ok {
+			result = append(result, []int{i, len(str) - len(rest)})
+			if len(s) != len(rest) {
+				s = rest
+				i = len(str) - len(rest)
+				continue
+			}
+		}
+		if len(s) == 0 {
+			if len(result) == 0 {
+				return nil
+			}
+			return result
+		}
+		s = s[1:]
+		i++
+	}
+}
+
 func (s *state) process(str []rune) (bool, []rune) {
 	if s.match {
 		return true, str

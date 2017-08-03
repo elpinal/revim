@@ -193,3 +193,114 @@ func TestFindStringIndex(t *testing.T) {
 		}
 	}
 }
+
+func TestFindAllStringIndex(t *testing.T) {
+	for i, test := range []struct {
+		expr string
+		s    string
+		loc  [][]int
+	}{
+		{
+			`aaa`, `aaa`, [][]int{{0, 3}},
+		},
+		{
+			`aaa`, ` aaaaa bbbbb `, [][]int{{1, 4}},
+		},
+		{
+			`aaa`, `aa`, nil,
+		},
+		{
+			`aaa\|bbb`, `aaaa`, [][]int{{0, 3}},
+		},
+		{
+			`aaa\|bbb`, `bbbb`, [][]int{{0, 3}},
+		},
+		{
+			`aaa\|bbb`, `bb`, nil,
+		},
+		{
+			`aaabbb\&aaa`, `aaabbb`, [][]int{{0, 3}},
+		},
+		{
+			`aaabbb\&aaa`, `aaa`, nil,
+		},
+		{
+			`bbb\&aaa\|aaabbb\&aaa`, `aaabbb`, [][]int{{0, 3}},
+		},
+		{
+			`aaa\\bbb`, `aaa\bbb`, [][]int{{0, 7}},
+		},
+		{
+			`aba*`, `ab`, [][]int{{0, 2}},
+		},
+		{
+			`aba*`, `aba`, [][]int{{0, 3}},
+		},
+		{
+			`aba*`, `abaa`, [][]int{{0, 4}},
+		},
+		{
+			`aba*`, `aaa`, nil,
+		},
+		{
+			`\(aba\)*`, ``, [][]int{{0, 0}},
+		},
+		{
+			`\(aba\)*`, `aba`, [][]int{{0, 3}},
+		},
+		{
+			`aba\(aba\)*`, `abaaba`, [][]int{{0, 6}},
+		},
+		{
+			`aba\(aba\)*`, `abaaaa`, [][]int{{0, 3}},
+		},
+		{
+			`\(aba\)*`, `abbaabc`, [][]int{{0, 0}},
+		},
+		{
+			`\(aba\)\+`, `abaaabc`, [][]int{{0, 3}},
+		},
+		{
+			`\(aba\)\+`, `abaabac`, [][]int{{0, 6}},
+		},
+		{
+			`\(aba\)\+`, `aaaabc`, nil,
+		},
+		{
+			`\(aba\)\?`, ``, [][]int{{0, 0}},
+		},
+		{
+			`\(aba\)\?`, `aba`, [][]int{{0, 3}},
+		},
+		{
+			`\(aba\)\?`, `ccc`, [][]int{{0, 0}},
+		},
+		{
+			`\(aba\)\?cc`, `abaccKcccccKabacc`, [][]int{
+				{0, 5},
+				{6, 8},
+				{8, 10},
+				{12, 17},
+			},
+		},
+	} {
+		re, err := Compile(test.expr)
+		if err != nil {
+			t.Fatalf("compiling (%d, %q): %v", i, test.s, err)
+		}
+		loc := re.FindAllStringIndex(test.s)
+		if loc == nil || test.loc == nil {
+			if loc != nil && test.loc == nil {
+				t.Errorf("FindStringIndex(%d, %q): want nil, but got %v", i, test.s, loc)
+			} else if loc == nil && test.loc != nil {
+				t.Errorf("FindStringIndex(%d, %q): want %v, but got nil", i, test.s, test.loc)
+			}
+		} else {
+			for k, e := range test.loc {
+				if e[0] != loc[k][0] || e[1] != loc[k][1] {
+					t.Errorf("FindStringIndex(%d, %d): expected %v got %v: %q", i, k, e, loc[k], test.s)
+				}
+			}
+		}
+	}
+}
