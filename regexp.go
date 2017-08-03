@@ -3,18 +3,21 @@ package revim
 //go:generate goyacc -o parse.go parse.y
 
 type state struct {
-	split bool
-	match bool
+	split     bool
+	and       bool
+	match     bool
+	precMatch bool
 
 	r    rune
 	out  *state
 	out1 *state
 	//lastList int
-
-	backtrack *state
 }
 
-var matchState = &state{match: true, out: &state{}}
+var (
+	matchState     = &state{match: true, out: &state{}}
+	precMatchState = &state{precMatch: true}
+)
 
 type frag struct {
 	start *state
@@ -49,14 +52,14 @@ func patch(f1 frag, s state) {
 
 func branch(f1, f2 frag) frag {
 	s := state{
-		split: true, // FIXME: In fact, it's false.
-		out:   f2.start,
+		and:  true,
+		out:  f1.start,
+		out1: f2.start,
 	}
-	patch(f1, s)
-	f1.start.backtrack = s.out
+	patch(f2, *matchState)
 	return frag{
-		start: f1.start,
-		out:   f2.out,
+		start: &s,
+		out:   f1.out,
 	}
 }
 

@@ -21,7 +21,7 @@ func Compile(expr string) (*Regexp, error) {
 func (re *Regexp) MatchString(str string) bool {
 	s := str
 	for {
-		ok, _ := re.s.process(make(map[*state]string), s)
+		ok, _ := re.s.process(s)
 		if ok {
 			return true
 		}
@@ -33,15 +33,20 @@ func (re *Regexp) MatchString(str string) bool {
 	return false
 }
 
-func (s *state) process(m map[*state]string, str string) (bool, string) {
+func (s *state) process(str string) (bool, string) {
 	if s.match {
 		return true, str
 	}
-	if s.backtrack != nil {
-		m[s.backtrack] = str
-	}
-	if bs, ok := m[s]; ok {
-		str = bs
+	if s.and {
+		ok, rest := s.out.process(str)
+		if !ok {
+			return false, str
+		}
+		ok, rest = s.out1.process(str)
+		if ok {
+			return true, rest
+		}
+		return false, str
 	}
 	if !s.split {
 		if len(str) == 0 {
@@ -52,18 +57,15 @@ func (s *state) process(m map[*state]string, str string) (bool, string) {
 			if s.out == nil {
 				return true, str[size:]
 			}
-			return s.out.process(m, str[size:])
+			return s.out.process(str[size:])
 		}
 		return false, str
 	}
-	ok, rest := s.out.process(m, str)
+	ok, rest := s.out.process(str)
 	if ok {
 		return true, rest
 	}
-	if s.out1 == nil {
-		return false, str
-	}
-	ok, rest = s.out1.process(m, str)
+	ok, rest = s.out1.process(str)
 	if ok {
 		return true, rest
 	}
